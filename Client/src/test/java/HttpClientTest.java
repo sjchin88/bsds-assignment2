@@ -7,10 +7,7 @@ class HttpClientTest {
   private HttpClient httpClient;
   @BeforeEach
   void setUp() {
-
-    String[] comments = {"test1", "test2", "test3"};
-    this.httpClient = new HttpClient("test", 1, new CountDownLatch(1), comments, new Counter());
-    this.httpClient.setComments(comments);
+    this.httpClient = new HttpClient("test", 1, new CountDownLatch(1), new Counter());
   }
 
   @Test

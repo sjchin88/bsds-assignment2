@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -15,7 +17,11 @@ public class ClientRecordingDriver extends ClientDriver {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws InterruptedException, IOException {
-    for (int idx = 0; idx < 8; idx++){
+    System.out.println("Run with recording");
+    List<String[]> runRecords = new ArrayList<>();
+    final String[] headers = new String[]{"Number of Threads", "Number of requests", "Time taken", "Throughput per second"};
+    runRecords.add(headers);
+    for (int idx = 0; idx < NUMTHREADS_LIST.length; idx++){
       int numthreads = NUMTHREADS_LIST[idx];
       int totalRequests = REQUEST_LIST[idx];
       CountDownLatch countDownLatch = new CountDownLatch(numthreads);
@@ -24,19 +30,19 @@ public class ClientRecordingDriver extends ClientDriver {
       BlockingQueue<long[]> memoryBuffer = new LinkedBlockingDeque<>(totalRequests);
       Long start = System.currentTimeMillis();
       for (int i = 0; i < numthreads; i++){
-        Thread thread = new Thread(new HttpRecordingClient(URL, requestPerThread, countDownLatch, COMMENTS, memoryBuffer, counter));
+        Thread thread = new Thread(new HttpRecordingClient(URL, requestPerThread, countDownLatch, memoryBuffer, counter));
         thread.start();
       }
       countDownLatch.await();
       Long end = System.currentTimeMillis();
       Long timeTaken = end - start;
-      printOutput(counter, timeTaken, idx);
+      printOutput(counter, timeTaken, idx, runRecords);
       String outputname = "numthread-"+numthreads+"request-"+totalRequests;
       RecordProcessor recordProcessor = new RecordProcessor(memoryBuffer, outputname);
       recordProcessor.processData();
     }
-
-
+    RecordProcessor recordProcessor = new RecordProcessor(null, null);
+    recordProcessor.storeResult(runRecords, "RunsWithRecordingSummary.csv");
     ClientDriver.main(new String[] {});
   }
 }

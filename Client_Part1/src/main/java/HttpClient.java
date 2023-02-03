@@ -6,6 +6,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * HttpClient class implements Runnable for part II,
@@ -19,7 +20,6 @@ public class HttpClient implements Runnable{
       .build();
   protected Integer numRequest;
   protected CountDownLatch countDownLatch;
-  protected String[] comments;
   protected static final String URL_LEFT = "/left";
   protected static final String URL_RIGHT = "/right";
   protected static final int LOWER_BOUND = 0;
@@ -31,24 +31,25 @@ public class HttpClient implements Runnable{
   protected int countFailure;
   protected Counter counter;
   protected Random random;
+  protected RandomStringUtils randomStringUtils;
 
   /**
    * Create new HttpClient based on given parameters
    * @param url url destination of the server
    * @param numRequest  number of request to be send
    * @param countDownLatch  countDownLatch to manage concurrency
-   * @param comments  String comments to chose from
+   * @param counter Counter object used to sum the count of success and unsuccess requests across threads
    */
   public HttpClient(String url, Integer numRequest, CountDownLatch countDownLatch,
-      String[] comments, Counter counter) {
+       Counter counter) {
     this.url = url;
     this.numRequest = numRequest;
     this.countDownLatch = countDownLatch;
-    this.comments = comments;
     this.countSuccess = 0;
     this.countFailure = 0;
     this.counter = counter;
     this.random = new Random();
+    this.randomStringUtils = new RandomStringUtils();
   }
 
   /**
@@ -82,16 +83,7 @@ public class HttpClient implements Runnable{
    * @return random comment in string
    */
   public String getRandomComment(){
-    int idx = random.nextInt(this.comments.length);
-    return comments[idx];
-  }
-
-  /**
-   * Set the comments pool to given argument
-   * @param comments new comments pool of String[]
-   */
-  public void setComments(String[] comments) {
-    this.comments = comments;
+    return this.randomStringUtils.randomAlphabetic(256);
   }
 
   /**

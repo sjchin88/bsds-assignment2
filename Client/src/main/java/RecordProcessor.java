@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -22,6 +23,7 @@ public class RecordProcessor {
   /**
    * Create the record processor with given memoryBuffer
    * @param memoryBuffer memoryBuffer of BlockingQueue storing long[] object
+   * @param name Name of the output file
    */
   public RecordProcessor(BlockingQueue<long[]> memoryBuffer, String name) {
     this.memoryBuffer = memoryBuffer;
@@ -89,6 +91,16 @@ public class RecordProcessor {
     csvWriter.close();
   }
 
+  /**
+   * Method to store the records from the List<String> into given fileName
+   * @param records record of List<String>
+   * @param fileName fileName of target record file
+   */
+  public void storeResult(List<String[]> records, String fileName) throws IOException {
+    final CSVWriter csvWriter = this.createWriter(fileName);
+    csvWriter.writeAll(records);
+    csvWriter.close();
+  }
   /**
    * Create a new CSV Writer from given String file
    * @param fullName name of the file in String

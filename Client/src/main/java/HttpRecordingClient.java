@@ -18,12 +18,12 @@ public class HttpRecordingClient extends HttpClient{
    * @param url Url of server
    * @param numRequest  number of request per thread
    * @param countDownLatch countDownLatch for each thread
-   * @param comments String[] of comments to chose from
    * @param memoryBuffer memory buffer of BlockingQueue to store the record of start time, latency (start - end) and response code
+   * @param counter Counter object used to sum the count of success and unsuccess requests across threads
    */
   public HttpRecordingClient(String url, Integer numRequest, CountDownLatch countDownLatch,
-      String[] comments, BlockingQueue<long[]> memoryBuffer, Counter counter) {
-    super(url,numRequest,countDownLatch,comments,counter);
+       BlockingQueue<long[]> memoryBuffer, Counter counter) {
+    super(url,numRequest,countDownLatch,counter);
     this.memoryBuffer = memoryBuffer;
   }
 
