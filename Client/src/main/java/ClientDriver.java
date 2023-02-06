@@ -11,10 +11,12 @@ import java.util.concurrent.CountDownLatch;
  * without recording the results
  */
 public class ClientDriver {
-  protected final static int[] NUMTHREADS_LIST = new int[] { 1, 1, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 500, 1000};
-  protected final static int[] REQUEST_LIST = new int[] {1, 100, 10_000, 100_000, 200_000, 300_000, 400_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000};
+  // protected final static int[] NUMTHREADS_LIST = new int[] { 1, 1, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 500, 1000};
+  // protected final static int[] REQUEST_LIST = new int[] {1, 100, 10_000, 100_000, 200_000, 300_000, 400_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000, 500_000};
+  protected final static int[] NUMTHREADS_LIST = new int[] { 1,  1, 10, 20, 50,  100, 200, 500, 1000};
+  protected final static int[] REQUEST_LIST = new int[] {1,  10_000, 100_000, 200_000,  500_000,  500_000, 500_000, 500_000, 500_000};
   // protected final static String[] COMMENTS = {"Hi", "How are you", "I Like You"};
-  protected final static String URL = "http://52.26.61.26:8080/Twinder/swipe";
+  protected final static String URL = "http://35.92.44.156:8080/Twinder/swipe";
 
 
   /**

@@ -17,7 +17,7 @@ public class ClientRecordingDriver extends ClientDriver {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws InterruptedException, IOException {
-    System.out.println("Run with recording");
+    System.out.println("Run with recording to Spring Server");
     List<String[]> runRecords = new ArrayList<>();
     final String[] headers = new String[]{"Number of Threads", "Number of requests", "Time taken", "Throughput per second"};
     runRecords.add(headers);
@@ -43,6 +43,6 @@ public class ClientRecordingDriver extends ClientDriver {
     }
     RecordProcessor recordProcessor = new RecordProcessor(null, null);
     recordProcessor.storeResult(runRecords, "RunsWithRecordingSummary.csv");
-    ClientDriver.main(new String[] {});
+    // ClientDriver.main(new String[] {});
   }
 }
