@@ -7,6 +7,14 @@ public class SwipeResponse {
   private String message;
 
   /**
+   * Create new SwipeResponse using given message
+   * @param message String message
+   */
+  public SwipeResponse(String message) {
+    this.message = message;
+  }
+
+  /**
    * Getter for the response message
    * @return messge in string
    */
