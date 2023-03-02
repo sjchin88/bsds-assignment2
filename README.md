@@ -117,8 +117,11 @@ declaring exchange, creating connection and channels, declaring queue etc.
 
 ### Useful commands
 After deploying the consumer program as executable jar file into EC2 instance, you can specify 
-
-
+1. The number of threads as first command-line argument provided when running the jar file.
+2. The server address as second command-line argument provided when running the jar file. 
+Example java -jar consumers-like.jar 20 172.22.22.135 will run the consumers-like.jar program with 20 threads and server address of 172.22.22.135
+Note you cannot skip the first argument if you want to specify the server address using second argument. 
+If you dont specify the arguments, the default value will be 10 threads and the server address you set up in the original program. 
 
 
 
