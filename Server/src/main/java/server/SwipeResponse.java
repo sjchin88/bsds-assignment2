@@ -2,6 +2,7 @@ package server;
 
 /**
  * Class for SwipeResponse
+ * Allow conversion directly to json object to include in Http Response
  */
 public class SwipeResponse {
   private String message;

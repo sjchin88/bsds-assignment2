@@ -2,6 +2,7 @@ package server;
 
 /**
  * SwipeDetail class to store the swipe information,
+ * allow conversion directly from the json object
  * which includes the id of swiper (in int), id of swipee (in int) and
  * comment (in string)
  */

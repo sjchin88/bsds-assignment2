@@ -9,12 +9,18 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 /**
  * RabbitMQ channel factory based on the apache pool libraries
+ * Credit: Ian Gorton, https://github.com/gortonator/foundations-of-scalable-systems/tree/main/Ch7
  */
 public class RabbitMQChannelFactory extends BasePooledObjectFactory<Channel> {
 
+  /**
+   * Default exchange_name used by the channels
+   */
+  private static final String EXCHANGE_NAME = "swipes";
   // Connection for RMQ
   private final Connection rmqConnection;
   private int channelCount;
+
 
   /**
    * Create new RabbitMQ channel factory using given RabbitMQ connection
@@ -34,6 +40,7 @@ public class RabbitMQChannelFactory extends BasePooledObjectFactory<Channel> {
   synchronized public Channel create() throws IOException {
     this.channelCount++;
     Channel channel = this.rmqConnection.createChannel();
+    channel.exchangeDeclare(EXCHANGE_NAME,"direct");
     return channel;
   }
 

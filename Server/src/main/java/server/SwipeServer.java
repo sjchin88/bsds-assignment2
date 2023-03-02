@@ -6,7 +6,10 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -66,13 +69,7 @@ public class SwipeServer extends HttpServlet {
   /**
    * number of channels to connect to RabbitMQ server
    */
-  private static final int NUM_CHANNELS = 30;
-
-  /**
-   * For Apache pool example, this allows the pool size to grow to ~= the same number of concurrent threads
-   * that utilize the pool. Pass to config.setMaxWait(..) method to allow this behaviour
-   */
-  private static final int ON_DEMAND = -1;
+  private static final int NUM_CHANNELS = 200;
 
   /**
    * Exchange name to be used on RabbitMQ server
@@ -82,12 +79,16 @@ public class SwipeServer extends HttpServlet {
   /**
    * Address of the RabbitMQ server, change it to IP address when hosting on EC-2
    */
-  private static final String SERVER = "localhost";
+  //private static String SERVER_ADDR = "localhost";
+  private static String SERVER_ADDR = "44.234.204.104";
+  private static String RABBIT_USER = "csj";
+  private static String RABBIT_PASS = "Gu33ssm3";
   private ConnectionFactory rabbitFactory;
   private RabbitMQChannelPool channelPool;
+  private Gson gson;
 
   /**
-   * Set up the server class
+   * Set up the server class , creating the RabbitMQ channel pool
    * @throws ServletException
    */
   @Override
@@ -95,7 +96,9 @@ public class SwipeServer extends HttpServlet {
     super.init();
     // Create new connection to the rabbit MQ
     this.rabbitFactory = new ConnectionFactory();
-    this.rabbitFactory.setHost(SERVER);
+    this.rabbitFactory.setHost(SERVER_ADDR);
+    this.rabbitFactory.setUsername(RABBIT_USER);
+    this.rabbitFactory.setPassword(RABBIT_PASS);
     Connection rabbitMQConn;
     try {
       rabbitMQConn = this.rabbitFactory.newConnection();
@@ -103,8 +106,13 @@ public class SwipeServer extends HttpServlet {
     } catch (IOException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+
+    // Create the required RabbitMQ Channels pool
     RabbitMQChannelFactory factory = new RabbitMQChannelFactory(rabbitMQConn);
     this.channelPool = new RabbitMQChannelPool(NUM_CHANNELS, factory);
+
+    // Initialized other instance variable
+    this.gson = new Gson();
   }
 
   /**
@@ -138,18 +146,16 @@ public class SwipeServer extends HttpServlet {
 
   /**
    * doPost method, convert the request body from json object to SwipeDetail class object
-   * check if input is valid, and give corresponding respond
+   * check if input is valid, and call the method processRequest for further processing
    * @param request HttpServletRequest
    * @param response HttpServletResponse
-   * @throws ServletException
    * @throws IOException
    */
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
+      throws IOException {
     response.setContentType("application/json");
     String urlPath = request.getPathInfo();
-    Gson gson = new Gson();
     // check for valid url
     if (urlPath == null || urlPath.isEmpty() || !isUrlValid(urlPath)) {
       this.replyMsg(ERROR_URL, HttpServletResponse.SC_NOT_FOUND, response);
@@ -160,36 +166,59 @@ public class SwipeServer extends HttpServlet {
 
   /**
    * Helper method to process the HTTP request
-   * @param request
-   * @param response
+   * @param request HttpServletRequest
+   * @param response HttpServletResponse
    */
   protected void processRequest(HttpServletRequest request, HttpServletResponse response) {
-    Gson gson = new Gson();
     try {
+      //Get the swipe details from json and stored it in SwipeDetail object
       StringBuilder sb = new StringBuilder();
       String s;
       while((s = request.getReader().readLine()) != null) {
         sb.append(s);
       }
-      SwipeDetail swipeDetail = (SwipeDetail) gson.fromJson(sb.toString(), SwipeDetail.class);
+      SwipeDetail swipeDetail = this.gson.fromJson(sb.toString(), SwipeDetail.class);
 
-      // return if validation fail
-      if(!this.validateData(swipeDetail, response)){
+      // validate Swiper ID
+      int swiperId  = Integer.parseInt(swipeDetail.getSwiper());
+      if(!validateSwiper(swiperId)){
+        this.replyMsg(ERROR_USER, HttpServletResponse.SC_NOT_FOUND, response);
         return;
       }
+
+      // validate Swipee ID
+      int swipeeId = Integer.parseInt(swipeDetail.getSwipee());
+      if(!validateSwipee(swipeeId)){
+        this.replyMsg(ERROR_INPUT, HttpServletResponse.SC_BAD_REQUEST, response);
+        return;
+      }
+
+      // validate comment
+      if(!validateComment(swipeDetail.getComment())){
+        this.replyMsg(ERROR_INPUT, HttpServletResponse.SC_BAD_REQUEST, response);
+        return;
+      }
+
+      // prepare the message to RabbitMQ and required info
+      ByteBuffer buffer = ByteBuffer.allocate(8);
+      buffer.putInt(swiperId);
+      buffer.putInt(swipeeId);
       String swipeDirection = request.getPathInfo().substring(1);
-      // format data and send the message to the channel
+
+      // borrow channel and publish the message
       Channel channel = this.channelPool.borrowObject();
-      channel.exchangeDeclare(EXCHANGE_NAME,"direct");
-      channel.basicPublish(EXCHANGE_NAME, swipeDirection, null, swipeDetail.toString().getBytes("UTF-8"));
+      channel.basicPublish(EXCHANGE_NAME, swipeDirection, null, buffer.array());
+      this.channelPool.returnObject(channel);
+
+      // Send the response back to client
       this.replyMsg(SWIPE_OK,HttpServletResponse.SC_CREATED,response);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      Logger.getLogger(RabbitMQChannelPool.class.getName()).log(Level.WARNING, "Error processing request", e);
     }
   }
 
   /**
-   * Send HTTP response using given message and responseCode
+   * Helper method to send HTTP response using given message and responseCode
    * @param message response message in string
    * @param responseCode HTTP response code in int
    * @param response  HttpServlet Response object
@@ -197,37 +226,48 @@ public class SwipeServer extends HttpServlet {
    */
   protected void replyMsg(String message, int responseCode, HttpServletResponse response)
       throws IOException {
-    Gson gson = new Gson();
     SwipeResponse swipeResponse = new SwipeResponse(message);
     response.setStatus(responseCode);
-    response.getOutputStream().print(gson.toJson(swipeResponse));
+    response.getOutputStream().print(this.gson.toJson(swipeResponse));
     response.getOutputStream().flush();
   }
 
   /**
-   * Validate the swipe details and send HttpResponse if required
-   * @param swipeDetail object containing the swipe details
-   * @param response HttpServletResponse
-   * @return boolean if the validation pass
+   * Static method to check if the swiperId is valid
+   * @param swiperId swiperId in int
+   * @return boolean indicate if the swiperId is valid
    */
-  protected boolean validateData(SwipeDetail swipeDetail, HttpServletResponse response)
-      throws IOException {
-    int swiperId  = Integer.parseInt(swipeDetail.getSwiper());
+  public static boolean validateSwiper(int swiperId){
     if(swiperId < LOWER_BOUND || swiperId > SWIPER_UPPER) {
-      this.replyMsg(ERROR_USER, HttpServletResponse.SC_NOT_FOUND, response);
       return false;
+    } else {
+      return true;
     }
+  }
 
-    int swipeeId = Integer.parseInt(swipeDetail.getSwipee());
-    if(swipeeId < LOWER_BOUND || swipeeId > SWIPEE_UPPER){
-      this.replyMsg(ERROR_INPUT, HttpServletResponse.SC_BAD_REQUEST, response);
+  /**
+   * Static method to check if the swipeeId is valid
+   * @param swipeeId swipeeId in int
+   * @return boolean indicate if the swiperId is valid
+   */
+  public static boolean validateSwipee(int swipeeId){
+    if(swipeeId < LOWER_BOUND || swipeeId > SWIPEE_UPPER) {
       return false;
+    } else {
+      return true;
     }
+  }
 
-    if(swipeDetail.getComment() == null){
-      this.replyMsg(ERROR_INPUT, HttpServletResponse.SC_BAD_REQUEST, response);
+  /**
+   * Static method to check if the comment is valid
+   * @param comment comment in String
+   * @return boolean indicate if the swiperId is valid
+   */
+  public static boolean validateComment(String comment){
+    if(comment == null){
       return false;
+    } else {
+      return true;
     }
-    return true;
   }
 }

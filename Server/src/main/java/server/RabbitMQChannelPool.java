@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 /**
  * A RabbitMQ Channel pool based on BlockingQueue implementation
+ * Credit: Ian Gorton, https://github.com/gortonator/foundations-of-scalable-systems/tree/main/Ch7
  */
 public class RabbitMQChannelPool {
   private final BlockingQueue<Channel> pool;

@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
@@ -40,28 +41,44 @@ public class RecordProcessor {
    * @throws IOException
    */
   public void processData() throws InterruptedException, IOException {
-    final CSVWriter csvWriter = this.createWriter(outputName + ".csv");
-    final String[] headers = new String[]{"Start", "Method", "Latency", "End", "Response Code"};
-    csvWriter.writeNext(headers);
+    // final CSVWriter csvWriter = this.createWriter(outputName + ".csv");
+    // final String[] headers = new String[]{"Start", "Method", "Latency", "End", "Response Code"};
+    // csvWriter.writeNext(headers);
     while(!this.memoryBuffer.isEmpty()){
-      String[] processedRecord = new String[5];
+      // String[] processedRecord = new String[5];
       long[] record = this.memoryBuffer.take();
-      Timestamp startTime = new Timestamp(record[0]);
-      processedRecord[0] = startTime.toString();
-      processedRecord[1] = "Post";
+      //Timestamp startTime = new Timestamp(record[0]);
+      //processedRecord[0] = startTime.toString();
+      //processedRecord[1] = "Post";
       int responseTime = (int) (record[1] - record[0]);
       stats.addValue(responseTime);
-      processedRecord[2] = String.valueOf(responseTime);
+      // processedRecord[2] = String.valueOf(responseTime);
       this.recordMap.put(record[1]/1000, recordMap.getOrDefault(record[1]/1000, 0) + 1);
-      processedRecord[3] = new Timestamp(record[1]).toString();
-      processedRecord[4] = String.valueOf(record[2]);
-      csvWriter.writeNext(processedRecord);
+      // processedRecord[3] = new Timestamp(record[1]).toString();
+      // processedRecord[4] = String.valueOf(record[2]);
+      // csvWriter.writeNext(processedRecord);
     }
-    csvWriter.close();
+    // csvWriter.close();
     this.printStatistic();
     this.storeSummary();
   }
 
+  public List<String> processAndStoreData() throws InterruptedException, IOException {
+    while(!this.memoryBuffer.isEmpty()){
+      long[] record = this.memoryBuffer.take();
+      int responseTime = (int) (record[1] - record[0]);
+      stats.addValue(responseTime);
+      this.recordMap.put(record[1]/1000, recordMap.getOrDefault(record[1]/1000, 0) + 1);
+    }
+    List<String> results = new ArrayList<>();
+    results.add(String.valueOf(stats.getMean()));
+    results.add(String.valueOf(stats.getPercentile(50.0)));
+    results.add(String.valueOf(stats.getPercentile(99.0)));
+    results.add(String.valueOf(stats.getMin()));
+    results.add(String.valueOf(stats.getMax()));
+    this.storeSummary();
+    return results;
+  }
   /**
    * Method to print the statistic of response time
    */

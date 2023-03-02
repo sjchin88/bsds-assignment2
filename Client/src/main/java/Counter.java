@@ -5,6 +5,7 @@
 public class Counter {
   private int countSuccess;
   private int countFailure;
+  private int sendCount;
 
   /**
    * Initialize a new Counter object
@@ -12,6 +13,12 @@ public class Counter {
   public Counter() {
     this.countSuccess = 0;
     this.countFailure = 0;
+  }
+
+  public Counter( int sendCount) {
+    this.countSuccess = countSuccess;
+    this.countFailure = countFailure;
+    this.sendCount = sendCount;
   }
 
   /**
@@ -23,6 +30,22 @@ public class Counter {
   public synchronized void addCount(int success, int failure) {
     this.countSuccess += success;
     this.countFailure += failure;
+  }
+
+  public synchronized void addSend(){
+    this.sendCount--;
+  }
+
+  public synchronized void addSuccess(){
+    this.countSuccess++;
+  }
+
+  public synchronized void addFail(){
+    this.countFailure++;
+  }
+
+  public synchronized int getSendCount() {
+    return sendCount;
   }
 
   /**
@@ -37,7 +60,7 @@ public class Counter {
    * Getter for the countFailure variable
    * @return countFailure in int
    */
-  public int getCountFailure() {
+  public synchronized int getCountFailure() {
     return countFailure;
   }
 }

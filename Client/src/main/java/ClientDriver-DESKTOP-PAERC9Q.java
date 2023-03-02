@@ -14,7 +14,7 @@ public class ClientDriver {
 
   //protected final static int[] NUMTHREADS_LIST = new int[] { 1, 200, 300, 400, 500, 600};
   //protected final static int[] REQUEST_LIST = new int[] { 10, 500_000,  500_000, 500_000, 500_000, 500_000};
-  protected final static int[] NUMTHREADS_LIST = new int[] { 1 , 300};
+  protected final static int[] NUMTHREADS_LIST = new int[] { 1 ,  300 };
   protected final static int[] REQUEST_LIST = new int[] { 10 , 1000_000};
   //protected final static String URL = "http://localhost:8091/Server_war_exploded/swipe";
   protected final static String URL = "http://34.215.190.242:8080/Twinder/swipe";
