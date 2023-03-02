@@ -80,9 +80,9 @@ public class SwipeServer extends HttpServlet {
    * Address of the RabbitMQ server, change it to IP address when hosting on EC-2
    */
   //private static String SERVER_ADDR = "localhost";
-  private static String SERVER_ADDR = "44.234.204.104";
-  private static String RABBIT_USER = "csj";
-  private static String RABBIT_PASS = "Gu33ssm3";
+  private static String SERVER_ADDR = "";
+  private static String RABBIT_USER = "";
+  private static String RABBIT_PASS = "";
   private ConnectionFactory rabbitFactory;
   private RabbitMQChannelPool channelPool;
   private Gson gson;
