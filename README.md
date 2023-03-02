@@ -90,7 +90,7 @@ You can run the backend on your local machine or deploy to AWS for testing.
 ### Local Set Up Guide
 
 1. Install and deploy RabbitMQ
-2. Change the server address to localhost in the servlet and consumers program. 
+2. Change the server address to localhost in the servlet (the static value in SwipeServer.java file) and consumers program (the static value in Recorder.java file). 
 3. Run the consumers program. 
 4. Deploy the server program into Tomcat 9 on intellij
 5. Change the server address in the client program to localhost:8080. 
