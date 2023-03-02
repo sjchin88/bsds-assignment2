@@ -18,7 +18,7 @@ public class Recorder {
   /**
    * Default server address
    */
-  protected static String SERVER_ADDR = "44.234.204.104";
-  protected static String ADMIN_NAME = "csj";
-  protected static String ADMIN_PASS = "Gu33ssm3";
+  protected static String SERVER_ADDR = "";
+  protected static String ADMIN_NAME = "";
+  protected static String ADMIN_PASS = "";
 }
